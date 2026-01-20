@@ -242,6 +242,60 @@ def format_label(label: str):
     disease_pretty = "Healthy" if disease.lower() == "healthy" else disease.replace("_", " ")
     return plant, status, disease_pretty
 
+def explain_label(label: str):
+    """
+    label contoh: 'Apple___Black_rot' atau 'Tomato___Leaf_Mold'
+    return: (plant_pretty, status, simple_text)
+    """
+    parts = label.split("___", 1)
+    plant = parts[0]
+    disease_raw = parts[1] if len(parts) > 1 else label
+
+    plant_pretty = plant.replace("_", " ").strip()
+    disease_pretty = disease_raw.replace("_", " ").strip()
+
+    # mapping sederhana (tidak melenceng: tetap menyebut istilah aslinya)
+    disease_map = {
+        "healthy": f"Daun {plant_pretty} terlihat sehat.",
+
+        "Apple_scab": f"Daun {plant_pretty} terindikasi kudis/keropeng (apple scab).",
+        "Black_rot": f"Daun {plant_pretty} terindikasi busuk hitam (black rot).",
+        "Cedar_apple_rust": f"Daun {plant_pretty} terindikasi karat daun (cedar apple rust).",
+
+        "Powdery_mildew": f"Daun {plant_pretty} terindikasi jamur embun tepung (powdery mildew).",
+
+        "Cercospora_leaf_spot Gray_leaf_spot": f"Daun {plant_pretty} terindikasi bercak daun (Cercospora/Gray leaf spot).",
+        "Common_rust": f"Daun {plant_pretty} terindikasi karat daun (common rust).",
+        "Northern_Leaf_Blight": f"Daun {plant_pretty} terindikasi hawar daun (northern leaf blight).",
+
+        "Esca_(Black_Measles)": f"Daun {plant_pretty} terindikasi penyakit Esca / black measles.",
+        "Leaf_blight_(Isariopsis_Leaf_Spot)": f"Daun {plant_pretty} terindikasi bercak daun (Isariopsis leaf spot).",
+
+        "Haunglongbing_(Citrus_greening)": f"Daun {plant_pretty} terindikasi HLB / citrus greening (huanglongbing).",
+
+        "Bacterial_spot": f"Daun {plant_pretty} terindikasi bercak bakteri (bacterial spot).",
+        "Early_blight": f"Daun {plant_pretty} terindikasi hawar awal (early blight).",
+        "Late_blight": f"Daun {plant_pretty} terindikasi hawar akhir (late blight).",
+
+        "Leaf_scorch": f"Daun {plant_pretty} terindikasi gejala 'daun terbakar' (leaf scorch).",
+
+        "Leaf_Mold": f"Daun {plant_pretty} terindikasi jamur daun (leaf mold).",
+        "Septoria_leaf_spot": f"Daun {plant_pretty} terindikasi bercak daun Septoria (septoria leaf spot).",
+        "Spider_mites Two-spotted_spider_mite": f"Daun {plant_pretty} terindikasi serangan tungau (two-spotted spider mite).",
+        "Target_Spot": f"Daun {plant_pretty} terindikasi bercak target (target spot).",
+        "Tomato_Yellow_Leaf_Curl_Virus": f"Daun {plant_pretty} terindikasi virus kuning keriting (TYLCV).",
+        "Tomato_mosaic_virus": f"Daun {plant_pretty} terindikasi virus mosaik (tomato mosaic virus).",
+    }
+
+    if disease_raw.lower() == "healthy":
+        status = "Sehat"
+        simple = disease_map["healthy"]
+    else:
+        status = "Terindikasi Penyakit"
+        simple = disease_map.get(disease_raw, f"Daun {plant_pretty} terindikasi {disease_pretty}.")
+
+    return plant_pretty, status, simple
+
 # ======================
 # NAV STATE
 # ======================
@@ -467,7 +521,7 @@ if st.session_state.page == "Portfolio":
 # ======================
 else:
     st.markdown('<div class="section-title">LeafVision App</div>', unsafe_allow_html=True)
-    st.markdown('<div class="small-muted">Upload foto daun, sistem memprediksi tanaman + diagnosis (Top-3 + confidence).</div>', unsafe_allow_html=True)
+    st.markdown('<div class="small-muted">Upload foto daun, sistem memprediksi tanaman + keterangan sederhana (confidence).</div>', unsafe_allow_html=True)
 
     # load model+class
     model, class_names = load_model_and_classes()
@@ -502,31 +556,19 @@ else:
             conf = float(probs[pred_idx])
 
             label = class_names[pred_idx]
-            plant, status, disease = format_label(label)
+
+            # versi sederhana
+            plant, status, simple_text = explain_label(label)
 
             st.write(f"**Tanaman:** {plant}")
             st.write(f"**Status:** {status}")
-            st.write(f"**Diagnosis:** {disease}")
+            st.write(f"**Keterangan:** {simple_text}")
 
-            st.write(f"**Confidence:** {conf:.4f}")
+            st.write(f"**Confidence:** {conf:.4f} ({conf*100:.1f}%)")
             st.progress(min(max(conf, 0.0), 1.0))
 
-            rows = []
-            for rank, i in enumerate(idxs, start=1):
-                lab = class_names[int(i)]
-                p, s, d = format_label(lab)
-                rows.append({
-                    "#": rank,
-                    "Tanaman": p,
-                    "Status": s,
-                    "Diagnosis": d,
-                    "Confidence": float(probs[int(i)])
-                })
-
-            st.dataframe(rows, use_container_width=True, hide_index=True)
+            st.caption("Catatan: Jika confidence rendah, kemungkinan gambar berbeda jauh dari data latih PlantVillage.")
 
         st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown(f'<div class="footerx">© {PERSON_NAME} | LeafVision — CNN PlantVillage</div>', unsafe_allow_html=True)
-
-
