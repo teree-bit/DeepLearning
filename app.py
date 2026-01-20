@@ -11,7 +11,7 @@ import gdown
 # KONFIG
 # ======================
 IMG_SIZE = 128
-MODEL_FILE_ID = "https://drive.google.com/file/d/1eScBrR1QndwXoL9-1X3xoO3LDawFxN7Q/view?usp=drive_link"   # <-- WAJIB kamu ganti
+MODEL_FILE_ID = "https://drive.google.com/file/d/1eScBrR1QndwXoL9-1X3xoO3LDawFxN7Q/view?usp=sharing"   # <-- WAJIB kamu ganti
 MODEL_URL = f"https://drive.google.com/uc?id={MODEL_FILE_ID}"
 MODEL_PATH = "model4_infer.keras"
 CLASS_PATH = "class_names.json"
@@ -145,3 +145,4 @@ if uploaded:
 
 else:
     st.info("Silakan upload gambar daun untuk melihat hasil prediksi.")
+
