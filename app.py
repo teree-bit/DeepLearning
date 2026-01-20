@@ -31,140 +31,139 @@ st.set_page_config(page_title="LeafVision | Portfolio", page_icon="🍃", layout
 st.markdown("""
 <style>
 :root{
-  --bg-dark:#020617;
-  --bg-card:#1e293b;
-  --bg-card-2:#0f172a;
-  --accent:#0ea5e9;
-  --text-main:#ffffff;
-  --text-muted:#cbd5e1;
-  --border: rgba(255,255,255,0.10);
+  --bg:#F7FAF8;
+  --card:#FFFFFF;
+  --card2:#F0F7F3;
+
+  --accent:#22C55E;
+  --accent2:#15803D;
+
+  --text:#0F172A;
+  --muted:#475569;
+
+  --border: rgba(15,23,42,0.10);
+  --shadow: 0 12px 30px rgba(2,6,23,0.08);
 }
 
-/* base */
-html, body, [class*="css"]  {
-  font-family: 'Poppins', sans-serif;
-}
-.stApp{
-  background: var(--bg-dark);
-  color: var(--text-main);
-}
-a { text-decoration: none; }
-
-/* remove streamlit default paddings a bit */
+html, body, [class*="css"] { font-family: 'Poppins', sans-serif; }
+.stApp{ background: var(--bg); color: var(--text); }
 .block-container { padding-top: 1.2rem; padding-bottom: 2rem; }
 
-/* top nav */
+a{ text-decoration:none; color: inherit; }
+
+/* Navbar */
 .navbarx{
-  position: sticky;
-  top: 0;
-  z-index: 50;
-  background: rgba(2,6,23,0.92);
-  border-bottom: 1px solid rgba(255,255,255,0.08);
+  position: sticky; top: 0; z-index: 50;
+  background: rgba(247,250,248,0.85);
+  border: 1px solid var(--border);
   backdrop-filter: blur(10px);
   padding: 12px 18px;
-  border-radius: 14px;
+  border-radius: 16px;
+  box-shadow: 0 10px 18px rgba(2,6,23,0.06);
   margin-bottom: 18px;
 }
-.brand{
-  font-weight: 800;
-  letter-spacing: .5px;
-  font-size: 18px;
-}
-.brand span{ color: var(--accent); }
-.navbtn{
-  display:inline-flex;
-  align-items:center;
-  gap:8px;
-  padding: 10px 14px;
-  border-radius: 999px;
-  border: 1px solid rgba(14,165,233,0.35);
-  color: var(--text-main);
-  background: rgba(14,165,233,0.08);
-  font-weight: 600;
-}
-.navbtn:hover{ border-color: var(--accent); background: rgba(14,165,233,0.14); }
+.brand{ font-weight: 900; letter-spacing:.3px; font-size: 18px; color: var(--text); }
+.brand span{ color: var(--accent2); }
 
-/* cards */
+/* Cards */
 .card-soft{
-  background: var(--bg-card);
+  background: var(--card);
   border: 1px solid var(--border);
   border-radius: 18px;
   padding: 18px;
+  box-shadow: var(--shadow);
 }
 .hero-card{
-  background: radial-gradient(circle at top right, #1e293b 0%, #020617 70%);
+  background: radial-gradient(circle at top right, rgba(34,197,94,0.18) 0%, var(--card) 60%);
   border: 1px solid var(--border);
   border-radius: 22px;
   padding: 26px;
+  box-shadow: var(--shadow);
 }
 .section-title{
-  font-weight: 800;
+  font-weight: 900;
   letter-spacing: 1px;
   text-transform: uppercase;
-  color: var(--accent);
+  color: var(--accent2);
   font-size: 14px;
   margin: 6px 0 14px;
 }
-.small-muted{ color: var(--text-muted); font-size: 0.95rem; }
+.small-muted{ color: var(--muted); font-size: 0.95rem; }
 .hero-title{ font-weight: 900; }
-.accent{ color: var(--accent); }
+.accent{ color: var(--accent2); }
 
+/* Chip */
 .chip{
-  display:inline-flex;
-  align-items:center;
-  gap:8px;
+  display:inline-flex; align-items:center; gap:8px;
   padding: 8px 12px;
   border-radius: 999px;
-  border: 1px solid rgba(14,165,233,0.30);
-  background: rgba(15,23,42,0.65);
-  color: var(--text-main);
-  font-weight: 600;
-  margin-right: 8px;
-  margin-top: 10px;
+  border: 1px solid rgba(34,197,94,0.30);
+  background: rgba(34,197,94,0.10);
+  color: var(--text);
+  font-weight: 700;
+  margin-right: 8px; margin-top: 10px;
   font-size: 0.85rem;
 }
+
+/* Feature row */
 .feature{
   display:flex; gap:12px;
   padding: 12px;
   border-radius: 14px;
-  border: 1px solid rgba(255,255,255,0.10);
-  background: rgba(15,23,42,0.50);
+  border: 1px solid var(--border);
+  background: var(--card2);
   margin-bottom: 10px;
 }
 .feature .ico{
   width: 38px; height: 38px;
   display:flex; align-items:center; justify-content:center;
   border-radius: 12px;
-  background: rgba(14,165,233,0.12);
-  border: 1px solid rgba(14,165,233,0.25);
-  color: var(--accent);
+  background: rgba(34,197,94,0.12);
+  border: 1px solid rgba(34,197,94,0.25);
+  color: var(--accent2);
   font-weight: 900;
 }
 
-/* inputs */
-.stFileUploader, .stTextInput, .stTextArea { color: white; }
-div[data-testid="stFileUploaderDropzone"]{
-  background: rgba(15,23,42,0.45);
-  border: 1px dashed rgba(14,165,233,0.35);
+/* Buttons (streamlit default button) */
+div.stButton > button{
+  border-radius: 999px !important;
+  font-weight: 800 !important;
+  border: 1px solid rgba(34,197,94,0.35) !important;
+  background: rgba(34,197,94,0.14) !important;
+  color: var(--text) !important;
 }
-div[data-testid="stFileUploaderDropzone"] * { color: var(--text-muted) !important; }
+div.stButton > button:hover{
+  background: rgba(34,197,94,0.22) !important;
+  border-color: rgba(21,128,61,0.55) !important;
+  transform: translateY(-1px);
+}
 
-/* table look */
-table { border-collapse: collapse; }
+/* File uploader */
+div[data-testid="stFileUploaderDropzone"]{
+  background: var(--card2);
+  border: 1px dashed rgba(34,197,94,0.40);
+  border-radius: 18px;
+}
+div[data-testid="stFileUploaderDropzone"] *{
+  color: var(--muted) !important;
+}
+
+/* Tables */
 thead th{
-  background: rgba(15,23,42,0.8) !important;
-  color: white !important;
+  background: rgba(34,197,94,0.18) !important;
+  color: var(--text) !important;
 }
 tbody td{
-  background: rgba(30,41,59,0.55) !important;
+  background: rgba(255,255,255,0.90) !important;
+  color: var(--text) !important;
 }
 
-/* footer */
+/* Footer */
 .footerx{
   margin-top: 26px;
-  border-top: 1px solid rgba(255,255,255,0.08);
+  border-top: 1px solid var(--border);
   padding-top: 14px;
-  color: var(--text-muted);
+  color: var(--muted);
   text-align:center;
 }
 </style>
@@ -529,4 +528,5 @@ else:
         st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown(f'<div class="footerx">© {PERSON_NAME} | LeafVision — CNN PlantVillage</div>', unsafe_allow_html=True)
+
 
