@@ -10,16 +10,168 @@ import gdown
 # ======================
 # KONFIG
 # ======================
+APP_NAME = "INDAH.PORT"
+PERSON_NAME = "Indah Theresia"
+LOCATION = "Pekanbaru, Indonesia"
+MAJOR = "Teknik Informatika"
+
 IMG_SIZE = 128
-MODEL_FILE_ID = "1eScBrR1QndwXoL9-1X3xoO3LDawFxN7Q"   # <-- WAJIB kamu ganti
+
+# === GANTI INI DENGAN FILE_ID DRIVE (bukan URL panjang) ===
+MODEL_FILE_ID = "1eScBrR1QndwXoL9-1X3xoO3LDawFxN7Q"  # contoh: isi FILE_ID kamu
 MODEL_URL = f"https://drive.google.com/uc?id={MODEL_FILE_ID}"
-MODEL_PATH = "model4_infer.keras"
+MODEL_PATH = "leaf_model.keras"
 CLASS_PATH = "class_names.json"
 
-st.set_page_config(page_title="LeafVision", page_icon="🍃", layout="centered")
+st.set_page_config(page_title="LeafVision | Portfolio", page_icon="🍃", layout="wide")
 
 # ======================
-# CUSTOM LAYER (karena model kamu pakai ini saat training)
+# THEME CSS (meniru style portofolio kamu)
+# ======================
+st.markdown("""
+<style>
+:root{
+  --bg-dark:#020617;
+  --bg-card:#1e293b;
+  --bg-card-2:#0f172a;
+  --accent:#0ea5e9;
+  --text-main:#ffffff;
+  --text-muted:#cbd5e1;
+  --border: rgba(255,255,255,0.10);
+}
+
+/* base */
+html, body, [class*="css"]  {
+  font-family: 'Poppins', sans-serif;
+}
+.stApp{
+  background: var(--bg-dark);
+  color: var(--text-main);
+}
+a { text-decoration: none; }
+
+/* remove streamlit default paddings a bit */
+.block-container { padding-top: 1.2rem; padding-bottom: 2rem; }
+
+/* top nav */
+.navbarx{
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(2,6,23,0.92);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  backdrop-filter: blur(10px);
+  padding: 12px 18px;
+  border-radius: 14px;
+  margin-bottom: 18px;
+}
+.brand{
+  font-weight: 800;
+  letter-spacing: .5px;
+  font-size: 18px;
+}
+.brand span{ color: var(--accent); }
+.navbtn{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(14,165,233,0.35);
+  color: var(--text-main);
+  background: rgba(14,165,233,0.08);
+  font-weight: 600;
+}
+.navbtn:hover{ border-color: var(--accent); background: rgba(14,165,233,0.14); }
+
+/* cards */
+.card-soft{
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 18px;
+}
+.hero-card{
+  background: radial-gradient(circle at top right, #1e293b 0%, #020617 70%);
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  padding: 26px;
+}
+.section-title{
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--accent);
+  font-size: 14px;
+  margin: 6px 0 14px;
+}
+.small-muted{ color: var(--text-muted); font-size: 0.95rem; }
+.hero-title{ font-weight: 900; }
+.accent{ color: var(--accent); }
+
+.chip{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(14,165,233,0.30);
+  background: rgba(15,23,42,0.65);
+  color: var(--text-main);
+  font-weight: 600;
+  margin-right: 8px;
+  margin-top: 10px;
+  font-size: 0.85rem;
+}
+.feature{
+  display:flex; gap:12px;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(15,23,42,0.50);
+  margin-bottom: 10px;
+}
+.feature .ico{
+  width: 38px; height: 38px;
+  display:flex; align-items:center; justify-content:center;
+  border-radius: 12px;
+  background: rgba(14,165,233,0.12);
+  border: 1px solid rgba(14,165,233,0.25);
+  color: var(--accent);
+  font-weight: 900;
+}
+
+/* inputs */
+.stFileUploader, .stTextInput, .stTextArea { color: white; }
+div[data-testid="stFileUploaderDropzone"]{
+  background: rgba(15,23,42,0.45);
+  border: 1px dashed rgba(14,165,233,0.35);
+}
+div[data-testid="stFileUploaderDropzone"] * { color: var(--text-muted) !important; }
+
+/* table look */
+table { border-collapse: collapse; }
+thead th{
+  background: rgba(15,23,42,0.8) !important;
+  color: white !important;
+}
+tbody td{
+  background: rgba(30,41,59,0.55) !important;
+}
+
+/* footer */
+.footerx{
+  margin-top: 26px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  padding-top: 14px;
+  color: var(--text-muted);
+  text-align:center;
+}
+</style>
+""", unsafe_allow_html=True)
+
+# ======================
+# CUSTOM LAYER (karena model kamu pakai augmentasi custom)
 # ======================
 class RandomGamma(layers.Layer):
     def __init__(self, gamma_min=0.8, gamma_max=1.2, **kwargs):
@@ -53,13 +205,14 @@ class RandomGaussianNoise(layers.Layer):
         return cfg
 
 # ======================
-# FUNCTIONS
+# UTIL
 # ======================
 def download_model_if_needed():
     if os.path.exists(MODEL_PATH):
         return
-    with st.spinner("Model belum ada di server. Sedang download dari Google Drive..."):
-        gdown.download(MODEL_URL, MODEL_PATH, quiet=False)
+    with st.spinner("Model belum ada di server. Download dari Google Drive..."):
+        # penting: MODEL_URL harus "uc?id=FILE_ID"
+        gdown.download(MODEL_URL, MODEL_PATH, quiet=False, fuzzy=True)
 
 @st.cache_resource
 def load_model_and_classes():
@@ -70,16 +223,13 @@ def load_model_and_classes():
 
     model = keras.models.load_model(
         MODEL_PATH,
-        custom_objects={
-            "RandomGamma": RandomGamma,
-            "RandomGaussianNoise": RandomGaussianNoise
-        },
+        custom_objects={"RandomGamma": RandomGamma, "RandomGaussianNoise": RandomGaussianNoise},
         compile=False,
         safe_mode=False
     )
     return model, class_names
 
-def preprocess_image(img: Image.Image) -> np.ndarray:
+def preprocess_pil(img: Image.Image) -> np.ndarray:
     img = img.convert("RGB").resize((IMG_SIZE, IMG_SIZE))
     x = np.array(img, dtype=np.float32) / 255.0
     x = np.expand_dims(x, axis=0)
@@ -94,56 +244,292 @@ def format_label(label: str):
     return plant, status, disease_pretty
 
 # ======================
-# UI (mirip app.php: upload -> hasil -> top3)
+# NAV STATE
 # ======================
-st.markdown(
-    """
-    <style>
-    .card {background: #1e293b; border: 1px solid rgba(255,255,255,0.10); padding: 18px; border-radius: 18px;}
-    .muted {color: #cbd5e1;}
-    </style>
-    """,
-    unsafe_allow_html=True
-)
+if "page" not in st.session_state:
+    st.session_state.page = "Portfolio"
 
-st.title("🍃 LeafVision | Deteksi Penyakit Daun")
-st.write("Upload foto daun → sistem memprediksi **tanaman, status, diagnosis** + **Top-3**.")
+def goto(page_name: str):
+    st.session_state.page = page_name
+    st.rerun()
 
-model, class_names = load_model_and_classes()
+# ======================
+# NAVBAR (mirip portofolio)
+# ======================
+left, right = st.columns([1.2, 1])
+with left:
+    st.markdown(f"""
+    <div class="navbarx">
+      <div class="brand">🍃 {APP_NAME.split('.')[0]}<span>.{APP_NAME.split('.')[1]}</span></div>
+    </div>
+    """, unsafe_allow_html=True)
 
-uploaded = st.file_uploader("Upload gambar (JPG/PNG)", type=["jpg", "jpeg", "png"])
+with right:
+    c1, c2 = st.columns(2)
+    with c1:
+        if st.button("🏠 Portfolio", use_container_width=True):
+            goto("Portfolio")
+    with c2:
+        if st.button("🍃 Deteksi Daun", use_container_width=True):
+            goto("Deteksi Daun")
 
-if uploaded:
-    img = Image.open(uploaded)
-    st.image(img, caption="Preview", use_container_width=True)
+# ======================
+# PAGE: PORTFOLIO
+# ======================
+if st.session_state.page == "Portfolio":
+    colA, colB = st.columns([1.35, 1], gap="large")
 
-    x = preprocess_image(img)
-    probs = model.predict(x, verbose=0)[0]
-    pred_idx = int(np.argmax(probs))
-    conf = float(probs[pred_idx])
+    with colA:
+        st.markdown(f"""
+        <div class="hero-card">
+          <div class="section-title">Home</div>
+          <h1 class="hero-title">{PERSON_NAME}</h1>
+          <div class="small-muted" style="font-size:1.05rem;">
+            Fokus di <span class="accent" style="font-weight:800;">Computer Vision</span>
+          </div>
+          <p class="small-muted" style="margin-top:12px;">
+            Mahasiswa Teknik Informatika yang tertarik membangun solusi digital yang terukur:
+            Web modern, Data Science, dan implementasi AI ke aplikasi nyata.
+          </p>
+        </div>
+        """, unsafe_allow_html=True)
 
-    label = class_names[pred_idx]
-    plant, status, disease = format_label(label)
+        btn1, btn2 = st.columns([1, 1])
+        with btn1:
+            if st.button("🧭 Lihat Project", use_container_width=True):
+                st.info("Scroll ke bagian Projects di bawah (di Streamlit tidak 100% anchor).")
+        with btn2:
+            if st.button("🍃 Coba LeafVision", use_container_width=True):
+                goto("Deteksi Daun")
 
-    st.markdown('<div class="card">', unsafe_allow_html=True)
-    st.subheader("Hasil Prediksi")
-    st.write(f"**Tanaman:** {plant}")
-    st.write(f"**Status:** {status}")
-    st.write(f"**Diagnosis:** {disease}")
-    st.write(f"**Confidence:** {conf:.4f}")
-    st.progress(min(max(conf, 0.0), 1.0))
-    st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown("""
+        <div style="margin-top:10px;">
+          <span class="chip">🐍 Python</span>
+          <span class="chip">🧠 TensorFlow</span>
+          <span class="chip">🐘 PHP</span>
+          <span class="chip">🧩 Bootstrap</span>
+        </div>
+        """, unsafe_allow_html=True)
 
-    st.markdown('<div class="card" style="margin-top:12px;">', unsafe_allow_html=True)
-    st.subheader("Top-3 Prediksi")
-    idxs = np.argsort(probs)[::-1][:3]
-    for rank, i in enumerate(idxs, start=1):
-        lab = class_names[int(i)]
-        p, s, d = format_label(lab)
-        st.write(f"{rank}. **{p}** | {s} | {d} — **{float(probs[int(i)]):.4f}**")
-    st.markdown('</div>', unsafe_allow_html=True)
+    with colB:
+        st.markdown("""
+        <div class="card-soft">
+          <div class="section-title">Highlight Project</div>
+          <h3 style="margin-top:0;">✨ LeafVision</h3>
 
+          <div class="feature">
+            <div class="ico">🖼</div>
+            <div>
+              <div style="font-weight:800;">Upload Foto Daun</div>
+              <div class="small-muted">Sistem menerima JPG/PNG dari user.</div>
+            </div>
+          </div>
+
+          <div class="feature">
+            <div class="ico">⚙</div>
+            <div>
+              <div style="font-weight:800;">Model CNN</div>
+              <div class="small-muted">Prediksi PlantVillage 38 kelas (Top-3 + confidence).</div>
+            </div>
+          </div>
+
+          <div class="feature">
+            <div class="ico">🚀</div>
+            <div>
+              <div style="font-weight:800;">Deployable</div>
+              <div class="small-muted">Model di-load langsung di web (tanpa PHP).</div>
+            </div>
+          </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        if st.button("⚡ Open LeafVision App", use_container_width=True):
+            goto("Deteksi Daun")
+
+    # ABOUT + QUICK INFO
+    st.markdown('<div class="section-title">About</div>', unsafe_allow_html=True)
+    a1, a2 = st.columns([1.3, 1], gap="large")
+    with a1:
+        st.markdown("""
+        <div class="card-soft">
+          <h3 style="margin-top:0;">Tentang Saya</h3>
+          <p class="small-muted">
+            Saya menyukai pembuatan sistem end-to-end: dari pengolahan data, training model,
+            sampai deployment menjadi aplikasi yang bisa digunakan user.
+          </p>
+          <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px; margin-top:10px;">
+            <div class="card-soft" style="background: rgba(15,23,42,0.6); padding:14px;">
+              <div style="font-weight:800;">Web Dev</div><div class="small-muted">PHP/Laravel + UI</div>
+            </div>
+            <div class="card-soft" style="background: rgba(15,23,42,0.6); padding:14px;">
+              <div style="font-weight:800;">AI / CV</div><div class="small-muted">CNN, TF/Keras</div>
+            </div>
+            <div class="card-soft" style="background: rgba(15,23,42,0.6); padding:14px;">
+              <div style="font-weight:800;">Deployment</div><div class="small-muted">Web + Model</div>
+            </div>
+          </div>
+        </div>
+        """, unsafe_allow_html=True)
+    with a2:
+        st.markdown(f"""
+        <div class="card-soft">
+          <h3 style="margin-top:0;">Quick Info</h3>
+          <div class="small-muted">📍 {LOCATION}</div>
+          <div class="small-muted">🎓 {MAJOR}</div>
+          <div class="small-muted">⭐ Focus: Web, Data, AI</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    # SKILLS
+    st.markdown('<div class="section-title">Skills</div>', unsafe_allow_html=True)
+    s1, s2 = st.columns(2, gap="large")
+    with s1:
+        st.markdown("""
+        <div class="card-soft">
+          <h3 style="margin-top:0;">💻 Development</h3>
+          <span class="chip">PHP</span>
+          <span class="chip">Laravel</span>
+          <span class="chip">MySQL</span>
+          <span class="chip">Bootstrap</span>
+          <span class="chip">REST API</span>
+        </div>
+        """, unsafe_allow_html=True)
+    with s2:
+        st.markdown("""
+        <div class="card-soft">
+          <h3 style="margin-top:0;">🧠 Data & AI</h3>
+          <span class="chip">Python</span>
+          <span class="chip">TensorFlow</span>
+          <span class="chip">CNN</span>
+          <span class="chip">Computer Vision</span>
+          <span class="chip">Deployment</span>
+        </div>
+        """, unsafe_allow_html=True)
+
+    # PROJECTS
+    st.markdown('<div class="section-title">Projects</div>', unsafe_allow_html=True)
+    p1, p2, p3 = st.columns(3, gap="large")
+    with p1:
+        st.markdown("""
+        <div class="card-soft">
+          <h3 style="margin-top:0;">🍃 LeafVision</h3>
+          <div class="small-muted">Klasifikasi penyakit daun (PlantVillage 38 kelas) + confidence + Top-3.</div>
+          <div style="margin-top:8px;">
+            <span class="chip">TFDS</span><span class="chip">CNN</span><span class="chip">Streamlit</span>
+          </div>
+        </div>
+        """, unsafe_allow_html=True)
+        if st.button("Open LeafVision", use_container_width=True):
+            goto("Deteksi Daun")
+    with p2:
+        st.markdown("""
+        <div class="card-soft">
+          <h3 style="margin-top:0;">⚙ Project Sistem</h3>
+          <div class="small-muted">Isi deskripsi project lain kamu di sini.</div>
+          <div style="margin-top:8px;"><span class="chip">Laravel</span><span class="chip">Database</span></div>
+        </div>
+        """, unsafe_allow_html=True)
+    with p3:
+        st.markdown("""
+        <div class="card-soft">
+          <h3 style="margin-top:0;">🔌 Project IoT</h3>
+          <div class="small-muted">Isi deskripsi project IoT kamu di sini.</div>
+          <div style="margin-top:8px;"><span class="chip">Arduino</span><span class="chip">Sensor</span></div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    # CONTACT
+    st.markdown('<div class="section-title">Contact</div>', unsafe_allow_html=True)
+    c1, c2 = st.columns(2, gap="large")
+    with c1:
+        st.markdown("""
+        <div class="card-soft">
+          <h3 style="margin-top:0;">Let’s connect</h3>
+          <div class="small-muted">Isi kontak asli kamu di sini.</div>
+          <div class="small-muted" style="margin-top:10px;">✉ emailkamu@example.com</div>
+          <div class="small-muted">💼 linkedin.com/in/username</div>
+        </div>
+        """, unsafe_allow_html=True)
+    with c2:
+        st.markdown("""
+        <div class="card-soft">
+          <h3 style="margin-top:0;">Message (Demo)</h3>
+        </div>
+        """, unsafe_allow_html=True)
+        st.text_input("Nama", placeholder="Nama kamu")
+        st.text_input("Email", placeholder="email@kamu.com")
+        st.text_area("Pesan", placeholder="Tulis pesan...")
+        st.button("Kirim (Demo)", use_container_width=True)
+
+    st.markdown(f'<div class="footerx">© {PERSON_NAME} | Built with ❤</div>', unsafe_allow_html=True)
+
+# ======================
+# PAGE: DETEKSI DAUN
+# ======================
 else:
-    st.info("Silakan upload gambar daun untuk melihat hasil prediksi.")
+    st.markdown('<div class="section-title">LeafVision App</div>', unsafe_allow_html=True)
+    st.markdown('<div class="small-muted">Upload foto daun, sistem memprediksi tanaman + diagnosis (Top-3 + confidence).</div>', unsafe_allow_html=True)
 
+    # load model+class
+    model, class_names = load_model_and_classes()
 
+    left, right = st.columns([1, 1.25], gap="large")
+
+    with left:
+        st.markdown('<div class="card-soft">', unsafe_allow_html=True)
+        st.markdown("### 📤 Upload Foto Daun")
+        uploaded = st.file_uploader("Pilih JPG/PNG", type=["jpg", "jpeg", "png"])
+        st.caption("Tips: daun terlihat dominan, tidak blur, pencahayaan cukup.")
+        st.markdown('</div>', unsafe_allow_html=True)
+
+        if uploaded:
+            img = Image.open(uploaded)
+            st.markdown('<div class="card-soft" style="margin-top:12px;">', unsafe_allow_html=True)
+            st.markdown("### 🖼 Preview")
+            st.image(img, use_container_width=True)
+            st.markdown('</div>', unsafe_allow_html=True)
+
+    with right:
+        st.markdown('<div class="card-soft">', unsafe_allow_html=True)
+        st.markdown("### 📊 Hasil Prediksi")
+
+        if not uploaded:
+            st.info("Silakan upload gambar untuk melihat hasil prediksi.")
+        else:
+            img = Image.open(uploaded)
+            x = preprocess_pil(img)
+            probs = model.predict(x, verbose=0)[0]
+            pred_idx = int(np.argmax(probs))
+            conf = float(probs[pred_idx])
+
+            label = class_names[pred_idx]
+            plant, status, disease = format_label(label)
+
+            st.write(f"**Tanaman:** {plant}")
+            st.write(f"**Status:** {status}")
+            st.write(f"**Diagnosis:** {disease}")
+
+            st.write(f"**Confidence:** {conf:.4f}")
+            st.progress(min(max(conf, 0.0), 1.0))
+
+            st.markdown("---")
+            st.markdown("### 🔝 Top-3 Prediksi")
+            idxs = np.argsort(probs)[::-1][:3]
+
+            rows = []
+            for rank, i in enumerate(idxs, start=1):
+                lab = class_names[int(i)]
+                p, s, d = format_label(lab)
+                rows.append({
+                    "#": rank,
+                    "Tanaman": p,
+                    "Status": s,
+                    "Diagnosis": d,
+                    "Confidence": float(probs[int(i)])
+                })
+
+            st.dataframe(rows, use_container_width=True, hide_index=True)
+
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    st.markdown(f'<div class="footerx">© {PERSON_NAME} | LeafVision — CNN PlantVillage</div>', unsafe_allow_html=True)
