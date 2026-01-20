@@ -285,7 +285,7 @@ if st.session_state.page == "Portfolio":
           <div class="section-title">Home</div>
           <h1 class="hero-title">{PERSON_NAME}</h1>
           <div class="small-muted" style="font-size:1.05rem;">
-            Fokus di <span class="accent" style="font-weight:800;">Computer Vision</span>
+            Fokus di <span class="accent" style="font-weight:800;">Web Dev</span>
           </div>
           <p class="small-muted" style="margin-top:12px;">
             Mahasiswa Teknik Informatika yang tertarik membangun solusi digital yang terukur:
@@ -512,10 +512,6 @@ else:
             st.write(f"**Confidence:** {conf:.4f}")
             st.progress(min(max(conf, 0.0), 1.0))
 
-            st.markdown("---")
-            st.markdown("### 🔝 Top-3 Prediksi")
-            idxs = np.argsort(probs)[::-1][:3]
-
             rows = []
             for rank, i in enumerate(idxs, start=1):
                 lab = class_names[int(i)]
@@ -533,3 +529,4 @@ else:
         st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown(f'<div class="footerx">© {PERSON_NAME} | LeafVision — CNN PlantVillage</div>', unsafe_allow_html=True)
+
