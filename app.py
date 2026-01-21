@@ -295,6 +295,22 @@ def explain_label(label: str):
         simple = disease_map.get(disease_raw, f"Daun {plant_pretty} terindikasi {disease_pretty}.")
 
     return plant_pretty, status, simple
+def tomato_indices(class_names):
+    return [i for i, name in enumerate(class_names) if name.startswith("Tomato___")]
+
+def predict_tomato_only(model, class_names, img_pil, threshold=0.55):
+    x = preprocess_pil(img_pil)
+    probs = model.predict(x, verbose=0)[0]
+
+    t_idx = tomato_indices(class_names)
+    tomato_mass = float(np.sum(probs[t_idx]))  # total skor semua kelas Tomato
+
+    best_local = int(np.argmax(probs[t_idx]))
+    best_idx = int(t_idx[best_local])
+    best_conf = float(probs[best_idx])
+
+    is_tomato = tomato_mass >= threshold
+    return is_tomato, tomato_mass, best_idx, best_conf
 
 # ======================
 # NAV STATE
@@ -516,81 +532,71 @@ if st.session_state.page == "Portfolio":
 
     st.markdown(f'<div class="footerx">© {PERSON_NAME} | Built with ❤</div>', unsafe_allow_html=True)
 
-def tomato_indices(class_names):
-    return [i for i, name in enumerate(class_names) if name.startswith("Tomato___")]
-
-def predict_tomato_only(model, class_names, img_pil, threshold=0.55):
-    x = preprocess_pil(img_pil)
-    probs = model.predict(x, verbose=0)[0]
-
-    t_idx = tomato_indices(class_names)
-    tomato_mass = float(np.sum(probs[t_idx]))  # total skor semua kelas Tomato
-
-    best_local = int(np.argmax(probs[t_idx]))
-    best_idx = int(t_idx[best_local])
-    best_conf = float(probs[best_idx])
-
-    is_tomato = tomato_mass >= threshold
-    return is_tomato, tomato_mass, best_idx, best_conf
-
 # ======================
 # PAGE: DETEKSI DAUN
 # ======================
 else:
     st.markdown('<div class="section-title">LeafVision App</div>', unsafe_allow_html=True)
-    st.markdown('<div class="small-muted">Upload foto daun, sistem memprediksi tanaman + keterangan sederhana (confidence).</div>', unsafe_allow_html=True)
+    st.markdown(
+        '<div class="small-muted">Upload foto daun tomat. Jika bukan tomat, sistem akan menolak.</div>',
+        unsafe_allow_html=True
+    )
 
-    # load model+class
+    # load model + class
     model, class_names = load_model_and_classes()
 
     left, right = st.columns([1, 1.25], gap="large")
 
     with left:
         st.markdown('<div class="card-soft">', unsafe_allow_html=True)
-        st.markdown("### 📤 Upload Foto Daun")
+        st.markdown("### 📤 Upload Foto Daun Tomat")
         uploaded = st.file_uploader("Pilih JPG/PNG", type=["jpg", "jpeg", "png"])
         st.caption("Tips: daun terlihat dominan, tidak blur, pencahayaan cukup.")
         st.markdown('</div>', unsafe_allow_html=True)
 
-        if uploaded:
-            img = Image.open(uploaded)
+        if uploaded is not None:
+            img_preview = Image.open(uploaded)
             st.markdown('<div class="card-soft" style="margin-top:12px;">', unsafe_allow_html=True)
             st.markdown("### 🖼 Preview")
-            st.image(img, use_container_width=True)
+            st.image(img_preview, use_container_width=True)
             st.markdown('</div>', unsafe_allow_html=True)
 
     with right:
         st.markdown('<div class="card-soft">', unsafe_allow_html=True)
         st.markdown("### 📊 Hasil Prediksi")
 
-        if not uploaded:
-            st.info("Silakan upload gambar untuk melihat hasil prediksi.")
-  else:
-      img = Image.open(uploaded)
-      is_tomato, tomato_mass, best_idx, best_conf = predict_tomato_only(
-          model, class_names, img, threshold=0.55
-      )
-  
-      if not is_tomato:
-          st.error("Aplikasi ini hanya untuk **daun tomat**. Silakan upload foto daun tomat.")
-          st.caption(f"(Skor tomat: {tomato_mass:.4f} — di bawah threshold)")
-      else:
-          label = class_names[best_idx]
-          plant, status, simple_text = explain_label(label)
-  
-          st.write(f"**Tanaman:** {plant}")  # harusnya Tomato
-          st.write(f"**Status:** {status}")
-          st.write(f"**Keterangan:** {simple_text}")
-  
-          st.write(f"**Confidence:** {best_conf:.4f} ({best_conf*100:.1f}%)")
-          st.progress(min(max(best_conf, 0.0), 1.0))
-          st.caption(f"Skor tomat total: {tomato_mass:.4f}")
-  
+        if uploaded is None:
+            st.info("Silakan upload gambar daun tomat untuk melihat hasil prediksi.")
+        else:
+            img = Image.open(uploaded)
 
-            st.caption("Catatan: Jika confidence rendah, kemungkinan gambar berbeda jauh dari data latih PlantVillage.")
+            is_tomato, tomato_mass, best_idx, best_conf = predict_tomato_only(
+                model, class_names, img, threshold=0.55
+            )
+
+            if not is_tomato:
+                st.error("Aplikasi ini hanya untuk **daun tomat**. Silakan upload foto daun tomat.")
+                st.caption(f"Skor tomat: {tomato_mass:.4f} (di bawah threshold)")
+            else:
+                label = class_names[best_idx]
+                plant, status, simple_text = explain_label(label)
+
+                st.write(f"**Tanaman:** {plant}")
+                st.write(f"**Status:** {status}")
+                st.write(f"**Keterangan:** {simple_text}")
+
+                st.write(f"**Confidence:** {best_conf:.4f} ({best_conf*100:.1f}%)")
+                st.progress(min(max(best_conf, 0.0), 1.0))
+                st.caption(f"Skor tomat total: {tomato_mass:.4f}")
+
+                st.caption("Catatan: confidence rendah bisa terjadi jika foto blur/gelap atau tidak mirip data PlantVillage.")
 
         st.markdown('</div>', unsafe_allow_html=True)
 
-    st.markdown(f'<div class="footerx">© {PERSON_NAME} | LeafVision — CNN PlantVillage</div>', unsafe_allow_html=True)
+    st.markdown(
+        f'<div class="footerx">© {PERSON_NAME} | LeafVision — Tomato Only</div>',
+        unsafe_allow_html=True
+    )
+
 
 
