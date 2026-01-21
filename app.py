@@ -565,31 +565,32 @@ else:
 
         if not uploaded:
             st.info("Silakan upload gambar untuk melihat hasil prediksi.")
-    else:
-        img = Image.open(uploaded)
-        is_tomato, tomato_mass, best_idx, best_conf = predict_tomato_only(
-            model, class_names, img, threshold=0.55
-        )
-    
-        if not is_tomato:
-            st.error("Aplikasi ini hanya untuk **daun tomat**. Silakan upload foto daun tomat.")
-            st.caption(f"(Skor tomat: {tomato_mass:.4f} — di bawah threshold)")
-        else:
-            label = class_names[best_idx]
-            plant, status, simple_text = explain_label(label)
-    
-            st.write(f"**Tanaman:** {plant}")  # harusnya Tomato
-            st.write(f"**Status:** {status}")
-            st.write(f"**Keterangan:** {simple_text}")
-    
-            st.write(f"**Confidence:** {best_conf:.4f} ({best_conf*100:.1f}%)")
-            st.progress(min(max(best_conf, 0.0), 1.0))
-            st.caption(f"Skor tomat total: {tomato_mass:.4f}")
-    
+  else:
+      img = Image.open(uploaded)
+      is_tomato, tomato_mass, best_idx, best_conf = predict_tomato_only(
+          model, class_names, img, threshold=0.55
+      )
+  
+      if not is_tomato:
+          st.error("Aplikasi ini hanya untuk **daun tomat**. Silakan upload foto daun tomat.")
+          st.caption(f"(Skor tomat: {tomato_mass:.4f} — di bawah threshold)")
+      else:
+          label = class_names[best_idx]
+          plant, status, simple_text = explain_label(label)
+  
+          st.write(f"**Tanaman:** {plant}")  # harusnya Tomato
+          st.write(f"**Status:** {status}")
+          st.write(f"**Keterangan:** {simple_text}")
+  
+          st.write(f"**Confidence:** {best_conf:.4f} ({best_conf*100:.1f}%)")
+          st.progress(min(max(best_conf, 0.0), 1.0))
+          st.caption(f"Skor tomat total: {tomato_mass:.4f}")
+  
 
             st.caption("Catatan: Jika confidence rendah, kemungkinan gambar berbeda jauh dari data latih PlantVillage.")
 
         st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown(f'<div class="footerx">© {PERSON_NAME} | LeafVision — CNN PlantVillage</div>', unsafe_allow_html=True)
+
 
