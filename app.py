@@ -298,7 +298,7 @@ def explain_label(label: str):
 def tomato_indices(class_names):
     return [i for i, name in enumerate(class_names) if name.startswith("Tomato___")]
 
-def predict_tomato_only(model, class_names, img_pil, threshold=0.55):
+def predict_tomato_only(model, class_names, img_pil, threshold=0.4):
     x = preprocess_pil(img_pil)
     probs = model.predict(x, verbose=0)[0]
 
@@ -597,6 +597,7 @@ else:
         f'<div class="footerx">© {PERSON_NAME} | LeafVision — Tomato Only</div>',
         unsafe_allow_html=True
     )
+
 
 
 
