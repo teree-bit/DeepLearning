@@ -296,31 +296,7 @@ def explain_label(label: str):
 
     return plant_pretty, status, simple
   
-def tomato_indices(class_names):
-    idx = [i for i, name in enumerate(class_names) if name.lower().startswith("tomato")]
-    return np.array(idx, dtype=np.int64)
-
-def predict_tomato_only(model, class_names, img_pil, threshold=0.55):
-    x = preprocess_pil(img_pil)
-    probs = model.predict(x, verbose=0)[0]
-
-    # safety check: output model harus sama dengan jumlah class_names
-    if probs.shape[0] != len(class_names):
-        raise ValueError(f"Output model ({probs.shape[0]}) != jumlah class_names ({len(class_names)})")
-
-    t_idx = tomato_indices(class_names)
-    if len(t_idx) == 0:
-        raise ValueError("Tidak ada kelas Tomato di class_names.json")
-
-    tomato_mass = float(np.sum(probs[t_idx]))  # total skor semua kelas Tomato
-
-    best_local = int(np.argmax(probs[t_idx]))
-    best_idx = int(t_idx[best_local])
-    best_conf = float(probs[best_idx])
-
-    is_tomato = tomato_mass >= threshold
-    return is_tomato, tomato_mass, best_idx, best_conf
-
+def predict_tomato_only(model, class_names, img_pil, threshold=0.55): x = preprocess_pil(img_pil) probs = model.predict(x, verbose=0)[0] t_idx = tomato_indices(class_names) tomato_mass = float(np.sum(probs[t_idx])) # total skor semua kelas Tomato best_local = int(np.argmax(probs[t_idx])) best_idx = int(t_idx[best_local]) best_conf = float(probs[best_idx]) is_tomato = tomato_mass >= threshold return is_tomato, tomato_mass, best_idx, best_conf
 
 # ======================
 # NAV STATE
@@ -607,6 +583,7 @@ else:
         f'<div class="footerx">© {PERSON_NAME} | LeafVision — Tomato Only</div>',
         unsafe_allow_html=True
     )
+
 
 
 
