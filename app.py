@@ -296,7 +296,22 @@ def explain_label(label: str):
 
     return plant_pretty, status, simple
   
-def predict_tomato_only(model, class_names, img_pil, threshold=0.55): x = preprocess_pil(img_pil) probs = model.predict(x, verbose=0)[0] t_idx = tomato_indices(class_names) tomato_mass = float(np.sum(probs[t_idx])) # total skor semua kelas Tomato best_local = int(np.argmax(probs[t_idx])) best_idx = int(t_idx[best_local]) best_conf = float(probs[best_idx]) is_tomato = tomato_mass >= threshold return is_tomato, tomato_mass, best_idx, best_conf
+def tomato_indices(class_names):
+    return [i for i, name in enumerate(class_names) if name.startswith("Tomato___")]
+
+def predict_tomato_only(model, class_names, img_pil, threshold=0.3):
+    x = preprocess_pil(img_pil)
+    probs = model.predict(x, verbose=0)[0]
+
+    t_idx = tomato_indices(class_names)
+    tomato_mass = float(np.sum(probs[t_idx]))  # total skor semua kelas Tomato
+
+    best_local = int(np.argmax(probs[t_idx]))
+    best_idx = int(t_idx[best_local])
+    best_conf = float(probs[best_idx])
+
+    is_tomato = tomato_mass >= threshold
+    return is_tomato, tomato_mass, best_idx, best_conf
 
 # ======================
 # NAV STATE
@@ -583,6 +598,7 @@ else:
         f'<div class="footerx">© {PERSON_NAME} | LeafVision — Tomato Only</div>',
         unsafe_allow_html=True
     )
+
 
 
 
